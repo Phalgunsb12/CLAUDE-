@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Lost Treasure: Mystery of the Ancient Temple</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1611;
+  --parchment:#e8dcc0;
+  --parchment-dim:#cdbe97;
+  --jungle:#16281d;
+  --jungle-2:#203a29;
+  --amber:#d9a441;
+  --amber-dim:#8a6a2c;
+  --stone:#6b5d4f;
+  --stone-dark:#3c342a;
+  --danger:#a8362c;
+  --gold:#c9a63b;
+  --gold-bright:#f2d879;
+  --panel:#1c150e;
+  --panel-edge:#4a3722;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;padding:0;width:100%;height:100%;
+  background:var(--ink);
+  font-family:'Crimson Text',serif;
+  color:var(--parchment);
+  overflow:hidden;
+  -webkit-user-select:none;user-select:none;
+  touch-action:none;
+}
+h1,h2,h3,.display{font-family:'Cinzel',serif;letter-spacing:.04em;}
+#gameContainer{
+  position:relative;width:100vw;height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center, #1c2a1e 0%, #0a0e0a 100%);
+}
+canvas{
+  display:block;background:#000;
+  image-rendering:pixelated;
+  box-shadow:0 0 60px rgba(0,0,0,.8);
+}
+#canvasWrap{position:relative;}
+
+/* ---------- overlay screens ---------- */
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0d1610 0%,#1a2a1c 55%,#0d1005 100%);
+  z-index:50;text-align:center;padding:24px;
+}
+.hidden{display:none !important;}
+.title-glow{
+  font-size:clamp(28px,5vw,54px);
+  color:var(--gold-bright);
+  text-shadow:0 0 18px rgba(217,164,65,.55), 0 2px 0 #000;
+  margin:0 0 6px;
+}
+.subtitle{
+  color:var(--parchment-dim);font-style:italic;font-size:16px;margin-bottom:36px;
+  letter-spacing:.08em;
+}
+.menu-btn{
+  font-family:'Cinzel',serif;
+  background:linear-gradient(180deg,#2a2016,#160f09);
+  border:1px solid var(--panel-edge);
+  color:var(--parchment);
+  padding:13px 34px;margin:7px;min-width:260px;
+  font-size:15px;letter-spacing:.09em;cursor:pointer;
+  border-radius:2px;position:relative;
+  box-shadow:0 3px 0 #000, inset 0 0 0 1px rgba(217,164,65,.15);
+  transition:transform .12s, box-shadow .12s, color .12s;
+}
+.menu-btn:hover{color:var(--gold-bright);transform:translateY(-1px);box-shadow:0 4px 0 #000, inset 0 0 0 1px rgba(217,164,65,.4);}
+.menu-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #000;}
+.menu-btn:disabled{opacity:.35;cursor:not-allowed;}
+.menu-btn:disabled:hover{transform:none;color:var(--parchment);}
+.corner-frame{
+  position:absolute;inset:14px;border:1px solid rgba(217,164,65,.25);pointer-events:none;
+}
+.corner-frame::before,.corner-frame::after{content:'';position:absolute;width:26px;height:26px;border:2px solid var(--gold);}
+.corner-frame::before{top:-2px;left:-2px;border-right:none;border-bottom:none;}
+.corner-frame::after{bottom:-2px;right:-2px;border-left:none;border-top:none;}
+
+.panel-box{
+  background:linear-gradient(180deg,#241a10,#150f09);
+  border:1px solid var(--panel-edge);
+  box-shadow:0 8px 30px rgba(0,0,0,.6), inset 0 0 0 1px rgba(217,164,65,.08);
+  border-radius:3px;padding:26px 30px;max-width:520px;
+}
+.small-note{font-size:13px;color:var(--parchment-dim);margin-top:18px;line-height:1.5;}
+
+/* ---------- HUD ---------- */
+#hud{position:absolute;inset:0;pointer-events:none;z-index:20;font-family:'Cinzel',serif;}
+#hudTop{
+  position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+  align-items:flex-start;padding:12px 16px;
+}
+#healthWrap{display:flex;align-items:center;gap:8px;background:rgba(10,8,4,.55);padding:7px 12px;border-radius:3px;border:1px solid rgba(217,164,65,.25);}
+#healthLabel{font-size:11px;color:var(--parchment-dim);}
+#heartsRow{display:flex;gap:4px;}
+.heart{width:16px;height:16px;background:var(--danger);clip-path:polygon(50% 15%,61% 3%,75% 3%,88% 15%,88% 32%,50% 78%,12% 32%,12% 15%,25% 3%,39% 3%);box-shadow:0 0 4px rgba(168,54,44,.7);}
+.heart.empty{background:#3a2c22;box-shadow:none;}
+#objectiveBox{
+  background:rgba(10,8,4,.55);border:1px solid rgba(217,164,65,.25);padding:7px 14px;border-radius:3px;
+  max-width:46%;text-align:right;
+}
+#objectiveLabel{font-size:10px;color:var(--amber);letter-spacing:.12em;}
+#objectiveText{font-family:'Crimson Text',serif;font-size:14px;color:var(--parchment);font-style:italic;}
+#hudBottom{
+  position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:14px 16px;
+}
+.hud-round-btn{
+  pointer-events:auto;width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #3a2b18, #180f08);
+  border:1px solid var(--panel-edge);color:var(--gold-bright);
+  font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 3px 0 #000;
+}
+.hud-round-btn:active{box-shadow:0 1px 0 #000;transform:translateY(2px);}
+#clueCounter{
+  pointer-events:auto;background:rgba(10,8,4,.55);border:1px solid rgba(217,164,65,.25);
+  padding:8px 12px;border-radius:3px;font-size:12px;color:var(--parchment-dim);display:flex;gap:14px;
+}
+#clueCounter b{color:var(--gold-bright);font-weight:700;}
+#interactPrompt{
+  position:absolute;left:50%;bottom:18%;transform:translateX(-50%);
+  background:rgba(10,8,4,.75);border:1px solid var(--amber);color:var(--gold-bright);
+  padding:8px 16px;border-radius:20px;font-size:14px;letter-spacing:.05em;
+  opacity:0;transition:opacity .15s;pointer-events:none;
+}
+#interactPrompt.show{opacity:1;}
+
+/* ---------- minimap + quest log ---------- */
+#minimapWrap{
+  position:absolute;top:66px;right:12px;pointer-events:auto;
+  background:rgba(10,8,4,.6);border:1px solid rgba(217,164,65,.35);border-radius:4px;padding:6px;
+}
+#minimapWrap .mm-title{font-size:9px;letter-spacing:.14em;color:var(--amber);text-align:center;margin-bottom:3px;font-family:'Cinzel',serif;}
+#minimapCanvas{display:block;border-radius:2px;}
+#questLogBtn{margin-top:6px;width:100%;font-size:10px !important;padding:5px 0 !important;min-width:0 !important;}
+#questLog{
+  margin-top:6px;background:rgba(0,0,0,.3);border-radius:3px;padding:6px 8px;font-size:11px;
+  color:var(--parchment-dim);max-width:150px;line-height:1.5;
+}
+#questLog .qi{display:flex;gap:5px;align-items:flex-start;}
+#questLog .qi.done{color:#7bc47f;text-decoration:line-through;opacity:.7;}
+#questLog .qi .qmark{flex-shrink:0;}
+#hintFlash{
+  position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%, rgba(217,164,65,.18), transparent 70%);
+  opacity:0;transition:opacity .4s;z-index:22;
+}
+#hintFlash.show{opacity:1;}
+#damageVignette{
+  position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 0 rgba(168,54,44,0);
+  transition:box-shadow .1s;z-index:23;
+}
+#damageVignette.hit{box-shadow:inset 0 0 90px 30px rgba(168,54,44,.55);}
+#levelBanner{
+  position:absolute;top:38%;left:0;right:0;text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .8s;
+}
+#levelBanner.show{opacity:1;}
+#levelBanner .lname{font-size:clamp(24px,4vw,40px);color:var(--gold-bright);text-shadow:0 0 20px rgba(217,164,65,.6),0 2px 0 #000;}
+#levelBanner .lsub{font-size:14px;color:var(--parchment-dim);font-style:italic;font-family:'Crimson Text',serif;}
+#toast{
+  position:absolute;top:74px;left:50%;transform:translateX(-50%);
+  background:rgba(10,8,4,.85);border:1px solid var(--gold);color:var(--gold-bright);
+  padding:9px 18px;border-radius:3px;font-size:14px;opacity:0;transition:opacity .3s, top .3s;
+  pointer-events:none;font-family:'Crimson Text',serif;display:flex;align-items:center;gap:8px;white-space:nowrap;
+}
+#toast .toast-icon{font-size:18px;}
+#toast.show{opacity:1;top:88px;}
+
+/* ---------- inventory / dialogue / puzzle overlays ---------- */
+.modal-layer{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(4,3,1,.55);}
+.modal-card{background:linear-gradient(180deg,#241a10,#140e08);border:1px solid var(--panel-edge);border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.7);max-width:640px;width:90%;padding:22px 26px;max-height:82vh;overflow-y:auto;}
+.modal-card h2{margin:0 0 4px;color:var(--gold-bright);font-size:20px;}
+.modal-card .modal-sub{color:var(--parchment-dim);font-size:13px;margin-bottom:16px;font-style:italic;}
+.close-x{position:absolute;top:14px;right:18px;cursor:pointer;color:var(--parchment-dim);font-size:20px;}
+.modal-card{position:relative;}
+
+#invGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;}
+.inv-slot{
+  border:1px solid var(--panel-edge);background:rgba(0,0,0,.25);border-radius:3px;
+  padding:12px 8px;text-align:center;font-size:12px;color:var(--parchment-dim);min-height:78px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+}
+.inv-slot.have{color:var(--parchment);border-color:rgba(217,164,65,.4);}
+.inv-icon{font-size:24px;}
+.dialogue-text{line-height:1.6;font-size:16px;white-space:pre-wrap;}
+.puzzle-symbols{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:18px 0;}
+.symbol-btn{
+  width:64px;height:64px;font-size:28px;background:rgba(0,0,0,.3);border:1px solid var(--panel-edge);
+  border-radius:4px;color:var(--parchment);cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.symbol-btn:hover{border-color:var(--gold);}
+.symbol-btn.active{background:var(--amber-dim);border-color:var(--gold-bright);}
+.sequence-display{display:flex;gap:8px;justify-content:center;margin-bottom:10px;min-height:40px;}
+.seq-slot{width:34px;height:34px;border:1px dashed var(--panel-edge);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.code-wheels{display:flex;gap:10px;justify-content:center;margin:18px 0;}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.wheel button{width:36px;height:30px;background:#241a10;border:1px solid var(--panel-edge);color:var(--gold-bright);cursor:pointer;font-size:15px;}
+.wheel .digit{font-size:26px;width:44px;text-align:center;color:var(--parchment);}
+.puzzle-feedback{text-align:center;min-height:22px;font-size:14px;margin-top:6px;}
+.puzzle-feedback.ok{color:#7bc47f;}
+.puzzle-feedback.fail{color:var(--danger);}
+.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+
+/* ---------- victory ---------- */
+#victoryStats{margin:18px 0;font-size:15px;line-height:1.9;}
+#rankBadge{font-size:52px;color:var(--gold-bright);text-shadow:0 0 24px rgba(217,164,65,.7);font-family:'Cinzel',serif;}
+
+/* ---------- touch controls ---------- */
+#touchControls{position:absolute;inset:0;z-index:25;pointer-events:none;display:none;}
+#touchControls.active{display:block;}
+#joyBase{position:absolute;left:26px;bottom:26px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(217,164,65,.3);pointer-events:auto;}
+#joyStick{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:rgba(217,164,65,.35);border:1px solid var(--gold);}
+#touchInteract{position:absolute;right:30px;bottom:96px;width:64px;height:64px;border-radius:50%;background:rgba(217,164,65,.25);border:1px solid var(--gold);pointer-events:auto;font-family:'Cinzel',serif;color:var(--gold-bright);font-size:12px;display:flex;align-items:center;justify-content:center;}
+
+@media (max-width:768px){
+  #objectiveBox{max-width:60%;}
+  .modal-card{padding:16px 16px;}
+}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+  <div id="canvasWrap">
+    <canvas id="gameCanvas" width="960" height="600"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="hudTop">
+        <div id="healthWrap">
+          <span id="healthLabel">HEALTH</span>
+          <div id="heartsRow"></div>
+        </div>
+        <div id="objectiveBox">
+          <div id="objectiveLabel">CURRENT OBJECTIVE</div>
+          <div id="objectiveText">—</div>
+        </div>
+      </div>
+      <div id="levelBanner"><div class="lname"></div><div class="lsub"></div></div>
+      <div id="interactPrompt">Press E to Interact</div>
+      <div id="toast"></div>
+      <div id="minimapWrap">
+        <div class="mm-title">MAP</div>
+        <canvas id="minimapCanvas" width="130" height="90"></canvas>
+        <button class="menu-btn" id="questLogBtn">Quest Log (Q)</button>
+        <div id="questLog" class="hidden"></div>
+      </div>
+      <div id="hudBottom">
+        <div id="clueCounter">
+          <span>Clues: <b id="clueCount">0</b></span>
+          <span>Items: <b id="itemCount">0</b></span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div class="hud-round-btn" id="btnHint" title="Hint (H)">💡</div>
+          <div class="hud-round-btn" id="btnInventory" title="Inventory">🎒</div>
+          <div class="hud-round-btn" id="btnPause" title="Pause">⏸</div>
+        </div>
+      </div>
+    </div>
+    <div id="hintFlash"></div>
+    <div id="damageVignette"></div>
+
+    <!-- Touch controls -->
+    <div id="touchControls">
+      <div id="joyBase"><div id="joyStick"></div></div>
+      <div id="touchInteract">USE / E</div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="screenMenu" class="screen">
+      <div class="corner-frame"></div>
+      <h1 class="title-glow">THE LOST TREASURE</h1>
+      <div class="subtitle">Mystery of the Ancient Temple</div>
+      <button class="menu-btn" id="btnNewGame">New Game</button>
+      <button class="menu-btn" id="btnContinue">Continue</button>
+      <button class="menu-btn" id="btnHowTo">How to Play</button>
+      <button class="menu-btn" id="btnCredits">Credits</button>
+      <div class="small-note">🔊 Audio synthesized in-browser · Use WASD / Arrows to move · E to interact</div>
+    </div>
+
+    <!-- How to play -->
+    <div id="screenHowTo" class="screen hidden">
+      <div class="panel-box" style="max-width:560px;text-align:left;">
+        <h2 style="color:var(--gold-bright);margin-top:0;">How to Play</h2>
+        <p style="line-height:1.7;font-size:15px;">
+        Move with <b>WASD</b> or <b>Arrow Keys</b>. Press <b>E</b> to interact with chests, signs, levers and puzzle objects.
+        Open your <b>Inventory (I)</b> to review collected items and clues. Explore each area fully — every puzzle's
+        solution is hidden somewhere in the environment. Avoid traps and hazards; they cost you health. Progress through
+        five regions to reach the legendary treasure. Press <b>Esc</b> or the pause button to pause and save.
+        </p>
+      </div>
+      <button class="menu-btn" id="btnHowToBack" style="margin-top:20px;">Back</button>
+    </div>
+
+    <!-- Credits -->
+    <div id="screenCredits" class="screen hidden">
+      <div class="panel-box" style="text-align:left;">
+        <h2 style="color:var(--gold-bright);margin-top:0;">Credits</h2>
+        <p style="line-height:1.7;font-size:15px;">A browser adventure prototype — built with HTML5 Canvas and vanilla
+        JavaScript. All visuals are procedurally drawn; all sound is synthesized live with the Web Audio API. No external
+        assets required.</p>
+      </div>
+      <button class="menu-btn" id="btnCreditsBack" style="margin-top:20px;">Back</button>
+    </div>
+
+    <!-- Pause -->
+    <div id="screenPause" class="screen hidden" style="background:rgba(5,4,2,.85);">
+      <h2 class="title-glow" style="font-size:32px;">Paused</h2>
+      <button class="menu-btn" id="btnResume">Resume</button>
+      <button class="menu-btn" id="btnSaveNow">Save Game</button>
+      <button class="menu-btn" id="btnRestartLevel">Restart Level</button>
+      <button class="menu-btn" id="btnMuteToggle">Mute Audio: Off</button>
+      <button class="menu-btn" id="btnToMenu">Main Menu</button>
+    </div>
+
+    <!-- Victory -->
+    <div id="screenVictory" class="screen hidden">
+      <div class="corner-frame"></div>
+      <div id="rankBadge">S</div>
+      <h1 class="title-glow" style="margin-top:6px;">Adventure Completed</h1>
+      <div class="subtitle" id="victorySub">The legendary treasure is yours.</div>
+      <div id="victoryStats"></div>
+      <button class="menu-btn" id="btnPlayAgain">Play Again</button>
+      <button class="menu-btn" id="btnVictoryMenu">Main Menu</button>
+    </div>
+
+    <!-- Inventory modal -->
+    <div id="modalInventory" class="modal-layer hidden">
+      <div class="modal-card">
+        <span class="close-x" data-close="modalInventory">✕</span>
+        <h2>Inventory</h2>
+        <div class="modal-sub">Items and clues gathered on your journey</div>
+        <div id="invGrid"></div>
+      </div>
+    </div>
+
+    <!-- Dialogue / sign / journal modal -->
+    <div id="modalDialogue" class="modal-layer hidden">
+      <div class="modal-card">
+        <span class="close-x" data-close="modalDialogue">✕</span>
+        <h2 id="dialogueTitle">—</h2>
+        <div class="dialogue-text" id="dialogueBody">—</div>
+        <div class="modal-actions"><button class="menu-btn" data-close="modalDialogue" style="min-width:140px;">Close</button></div>
+      </div>
+    </div>
+
+    <!-- Generic puzzle modal -->
+    <div id="modalPuzzle" class="modal-layer hidden">
+      <div class="modal-card">
+        <span class="close-x" data-close="modalPuzzle">✕</span>
+        <h2 id="puzzleTitle">—</h2>
+        <div class="modal-sub" id="puzzleSub">—</div>
+        <div id="puzzleBody"></div>
+        <div class="puzzle-feedback" id="puzzleFeedback"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   THE LOST TREASURE: MYSTERY OF THE ANCIENT TEMPLE
+   Single-file build. Sections below mirror the intended module split:
+   AUDIO / SAVE / INVENTORY / PUZZLES / PLAYER / LEVELS / GAME (main loop)
+   ========================================================================= */
+
+/* ---------------------------- AUDIO MODULE ---------------------------- */
+const AudioSys = (() => {
+  let ctx = null, muted = false, ambientNodes = [];
+  function ensure(){ if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); } return ctx; }
+  function tone(freq, dur=0.15, type='sine', vol=0.18, delay=0){
+    if(muted) return;
+    const c = ensure();
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.connect(g); g.connect(c.destination);
+    const t0 = c.currentTime + delay;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.start(t0); o.stop(t0+dur+0.05);
+  }
+  function sequence(notes, type='sine', vol=0.2, gap=0.12){
+    notes.forEach((f,i)=>tone(f, gap*1.4, type, vol, i*gap));
+  }
+  const sfx = {
+    pickup: ()=>sequence([523,659,784], 'triangle', 0.16, 0.08),
+    unlock: ()=>sequence([392,494,587,784], 'square', 0.14, 0.1),
+    puzzleOk: ()=>sequence([440,554,659,880], 'sine', 0.2, 0.09),
+    puzzleFail: ()=>sequence([220,196], 'sawtooth', 0.15, 0.11),
+    hurt: ()=>tone(120,0.2,'sawtooth',0.22),
+    step: ()=>tone(90,0.04,'square',0.03),
+    door: ()=>sequence([196,262,330], 'triangle', 0.15, 0.1),
+    victory: ()=>sequence([523,659,784,1047,880,1047], 'triangle', 0.22, 0.14),
+    click: ()=>tone(700,0.05,'square',0.08),
+  };
+  function startAmbient(levelIdx){
+    stopAmbient();
+    if(muted) return;
+    const c = ensure();
+    const baseFreqs = [[110,164],[98,146],[73,110],[87,131],[130,196]][levelIdx] || [110,164];
+    baseFreqs.forEach((f,i)=>{
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.value = 0.0;
+      o.connect(g); g.connect(c.destination);
+      g.gain.linearRampToValueAtTime(0.035 - i*0.012, c.currentTime+2);
+      o.start();
+      ambientNodes.push({o,g});
+    });
+  }
+  function stopAmbient(){
+    ambientNodes.forEach(n=>{ try{ n.g.gain.linearRampToValueAtTime(0,ensure().currentTime+0.4); n.o.stop(ensure().currentTime+0.5);}catch(e){} });
+    ambientNodes = [];
+  }
+  function setMuted(m){ muted = m; if(m) stopAmbient(); }
+  return { sfx, startAmbient, stopAmbient, setMuted, ensure, get muted(){return muted;} };
+})();
+
+/* ---------------------------- SAVE MODULE ---------------------------- */
+const SaveSystem = (() => {
+  const KEY = 'lostTreasure_save_v1';
+  function save(state){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); return true; }catch(e){ return false; }
+  }
+  function load(){
+    try{ const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+  }
+  function exists(){ return !!localStorage.getItem(KEY); }
+  function reset(){ try{ localStorage.removeItem(KEY);}catch(e){} }
+  return { save, load, exists, reset };
+})();
+
+/* ---------------------------- INVENTORY MODULE ---------------------------- */
+const ITEM_DEFS = {
+  map:      {name:'Ancient Map',    icon:'🗺️'},
+  torch:    {name:'Torch',          icon:'🔥'},
+  rustyKey: {name:'Rusty Key',      icon:'🗝️'},
+  goldKey:  {name:'Golden Key',     icon:'🔑'},
+  coin:     {name:'Ancient Coin',   icon:'🪙'},
+  symbol:   {name:'Temple Symbol',  icon:'🔯'},
+  crystal:  {name:'Crystal',        icon:'💎'},
+  rope:     {name:'Rope',           icon:'🪢'},
+  treasureKey:{name:'Treasure Key', icon:'🏺'},
+};
+class Inventory {
+  constructor(){ this.items = new Set(); this.clues = new Set(); }
+  add(id){ this.items.add(id); }
+  has(id){ return this.items.has(id); }
+  addClue(id){ this.clues.add(id); }
+  serialize(){ return {items:[...this.items], clues:[...this.clues]}; }
+  restore(data){ this.items = new Set(data?.items||[]); this.clues = new Set(data?.clues||[]); }
+}
+
+/* ---------------------------- PUZZLE FRAMEWORK ---------------------------- */
+/* Reusable puzzle helpers rendered into #modalPuzzle. Each puzzle type
+   exposes an open(config, onSolve) function. */
+const Puzzles = (() => {
+  const body = () => document.getElementById('puzzleBody');
+  const feedback = () => document.getElementById('puzzleFeedback');
+  function setFeedback(msg, ok){
+    const f = feedback();
+    f.textContent = msg;
+    f.className = 'puzzle-feedback ' + (ok===true?'ok':ok===false?'fail':'');
+  }
+  function openShell(title, sub){
+    document.getElementById('puzzleTitle').textContent = title;
+    document.getElementById('puzzleSub').textContent = sub||'';
+    setFeedback('', null);
+    Modal.open('modalPuzzle');
+  }
+  // symbol sequence puzzle: player clicks symbols in the correct order
+  function symbolSequence({title, sub, symbols, solution, onSolve}){
+    openShell(title, sub);
+    let picked = [];
+    body().innerHTML = `
+      <div class="sequence-display" id="seqDisplay"></div>
+      <div class="puzzle-symbols" id="symBtns"></div>
+      <div class="modal-actions"><button class="menu-btn" id="seqReset" style="min-width:120px;">Reset</button></div>
+    `;
+    const seqDisplay = document.getElementById('seqDisplay');
+    const symBtns = document.getElementById('symBtns');
+    function renderSeq(){
+      seqDisplay.innerHTML = solution.map((_,i)=>`<div class="seq-slot">${picked[i]?picked[i]:''}</div>`).join('');
+    }
+    symbols.forEach(sym=>{
+      const b = document.createElement('button');
+      b.className = 'symbol-btn'; b.textContent = sym;
+      b.onclick = () => {
+        if(picked.length >= solution.length) return;
+        AudioSys.sfx.click();
+        picked.push(sym);
+        renderSeq();
+        if(picked.length === solution.length){
+          const correct = picked.every((s,i)=>s===solution[i]);
+          if(correct){
+            setFeedback('The mechanism clicks into place...', true);
+            AudioSys.sfx.puzzleOk();
+            setTimeout(()=>{ Modal.close('modalPuzzle'); onSolve(); }, 700);
+          } else {
+            setFeedback('Nothing happens. Try again.', false);
+            AudioSys.sfx.puzzleFail();
+            setTimeout(()=>{ picked=[]; renderSeq(); setFeedback('',null); }, 700);
+          }
+        }
+      };
+      symBtns.appendChild(b);
+    });
+    document.getElementById('seqReset').onclick = ()=>{ picked=[]; renderSeq(); setFeedback('',null); };
+    renderSeq();
+  }
+  // numeric code entry puzzle (village combination lock)
+  function codeEntry({title, sub, digits, solution, onSolve}){
+    openShell(title, sub);
+    let values = new Array(digits).fill(0);
+    body().innerHTML = `<div class="code-wheels" id="wheels"></div>
+      <div class="modal-actions"><button class="menu-btn" id="codeSubmit" style="min-width:140px;">Submit</button></div>`;
+    const wheels = document.getElementById('wheels');
+    for(let i=0;i<digits;i++){
+      const w = document.createElement('div'); w.className='wheel';
+      w.innerHTML = `<button class="up">▲</button><div class="digit">0</div><button class="dn">▼</button>`;
+      const digitEl = w.querySelector('.digit');
+      w.querySelector('.up').onclick = ()=>{ values[i]=(values[i]+1)%10; digitEl.textContent=values[i]; AudioSys.sfx.click(); };
+      w.querySelector('.dn').onclick = ()=>{ values[i]=(values[i]+9)%10; digitEl.textContent=values[i]; AudioSys.sfx.click(); };
+      wheels.appendChild(w);
+    }
+    document.getElementById('codeSubmit').onclick = ()=>{
+      const guess = values.join('');
+      if(guess === solution){
+        setFeedback('The lock releases with a heavy clunk.', true);
+        AudioSys.sfx.puzzleOk();
+        setTimeout(()=>{ Modal.close('modalPuzzle'); onSolve(); }, 700);
+      } else {
+        setFeedback('The lock holds fast. Wrong combination.', false);
+        AudioSys.sfx.puzzleFail();
+      }
+    };
+  }
+  // pressure plate sequence (walk-onto driven, but exposed as click puzzle for reliability)
+  function platesSequence({title, sub, plateLabels, solution, onSolve}){
+    symbolSequence({title, sub, symbols:plateLabels, solution, onSolve});
+  }
+  // rotation dials puzzle (temple)
+  function rotationDials({title, sub, options, solution, onSolve}){
+    openShell(title, sub);
+    let idxs = solution.map(()=>0);
+    body().innerHTML = `<div class="code-wheels" id="dials"></div>
+      <div class="modal-actions"><button class="menu-btn" id="dialSubmit" style="min-width:140px;">Align</button></div>`;
+    const dials = document.getElementById('dials');
+    solution.forEach((_,i)=>{
+      const w = document.createElement('div'); w.className='wheel';
+      w.innerHTML = `<button class="up">▲</button><div class="digit" style="font-size:24px;">${options[0]}</div><button class="dn">▼</button>`;
+      const digitEl = w.querySelector('.digit');
+      const cycle = (dir)=>{ idxs[i]=(idxs[i]+dir+options.length)%options.length; digitEl.textContent=options[idxs[i]]; AudioSys.sfx.click(); };
+      w.querySelector('.up').onclick = ()=>cycle(1);
+      w.querySelector('.dn').onclick = ()=>cycle(-1);
+      dials.appendChild(w);
+    });
+    document.getElementById('dialSubmit').onclick = ()=>{
+      const guess = idxs.map(i=>options[i]);
+      const correct = guess.every((s,i)=>s===solution[i]);
+      if(correct){
+        setFeedback('Stone grinds against stone as the door opens.', true);
+        AudioSys.sfx.puzzleOk();
+        setTimeout(()=>{ Modal.close('modalPuzzle'); onSolve(); }, 700);
+      } else {
+        setFeedback('The symbols do not align. Try again.', false);
+        AudioSys.sfx.puzzleFail();
+      }
+    };
+  }
+  // final multi-clue puzzle: choose items in a specific order
+  function finalClue({title, sub, choices, solution, onSolve}){
+    symbolSequence({title, sub, symbols:choices, solution, onSolve});
+  }
+  return { symbolSequence, codeEntry, platesSequence, rotationDials, finalClue };
+})();
+
+/* ---------------------------- MODAL HELPER ---------------------------- */
+const Modal = (() => {
+  let openStack = [];
+  function open(id){
+    document.getElementById(id).classList.remove('hidden');
+    openStack.push(id);
+    Game.inputLocked = true;
+  }
+  function close(id){
+    document.getElementById(id).classList.add('hidden');
+    openStack = openStack.filter(x=>x!==id);
+    if(openStack.length===0) Game.inputLocked = false;
+  }
+  function closeAll(){ ['modalInventory','modalDialogue','modalPuzzle'].forEach(close); }
+  return { open, close, closeAll };
+})();
+document.querySelectorAll('[data-close]').forEach(el=>{
+  el.addEventListener('click', ()=> Modal.close(el.getAttribute('data-close')));
+});
+
+/* ---------------------------- PLAYER MODULE ---------------------------- */
+class Player {
+  constructor(x,y){
+    this.x=x; this.y=y; this.w=22; this.h=30;
+    this.speed=2.6; this.dir='down'; this.moving=false;
+    this.animFrame=0; this.animTimer=0;
+    this.health=6; this.maxHealth=6;
+    this.invuln=0;
+    this.stepTimer=0;
+  }
+  update(dt, level){
+    let dx=0,dy=0;
+    if(Input.down('up')) dy-=1;
+    if(Input.down('down')) dy+=1;
+    if(Input.down('left')) dx-=1;
+    if(Input.down('right')) dx+=1;
+    this.moving = dx!==0||dy!==0;
+    if(dx!==0&&dy!==0){ dx*=0.7071; dy*=0.7071; }
+    if(dx>0)this.dir='right'; else if(dx<0)this.dir='left'; else if(dy>0)this.dir='down'; else if(dy<0)this.dir='up';
+
+    const nx = this.x + dx*this.speed;
+    const ny = this.y + dy*this.speed;
+    if(!level.collides(nx, this.y, this.w, this.h)) this.x = nx;
+    if(!level.collides(this.x, ny, this.w, this.h)) this.y = ny;
+    this.x = Math.max(0, Math.min(level.worldW-this.w, this.x));
+    this.y = Math.max(0, Math.min(level.worldH-this.h, this.y));
+
+    if(this.moving){
+      this.animTimer+=dt;
+      if(this.animTimer>120){ this.animTimer=0; this.animFrame=(this.animFrame+1)%4; }
+      this.stepTimer+=dt;
+      if(this.stepTimer>260){ this.stepTimer=0; AudioSys.sfx.step(); }
+    } else { this.animFrame=0; }
+    if(this.invuln>0) this.invuln -= dt;
+  }
+  damage(amount){
+    if(this.invuln>0) return;
+    this.health = Math.max(0, this.health-amount);
+    this.invuln = 900;
+    Game.screenShake = 10;
+    AudioSys.sfx.hurt();
+    if(this.health<=0) Game.respawn();
+  }
+  draw(ctx, camX, camY){
+    const sx = this.x-camX, sy = this.y-camY;
+    ctx.save();
+    if(this.invuln>0 && Math.floor(this.invuln/100)%2===0) ctx.globalAlpha=0.4;
+    // shadow
+    ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(sx+this.w/2, sy+this.h+2, 12,5,0,0,Math.PI*2); ctx.fill();
+    const bob = this.moving ? Math.sin(this.animFrame*1.6)*2 : 0;
+    // body
+    ctx.fillStyle = '#8a5a34';
+    ctx.fillRect(sx+4, sy+12+bob, this.w-8, this.h-16);
+    // cloak
+    ctx.fillStyle = '#3f5c3a';
+    ctx.beginPath();
+    ctx.moveTo(sx+2, sy+this.h+bob);
+    ctx.lineTo(sx+this.w-2, sy+this.h+bob);
+    ctx.lineTo(sx+this.w-4, sy+14+bob);
+    ctx.lineTo(sx+4, sy+14+bob);
+    ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = '#d8a978';
+    ctx.beginPath(); ctx.arc(sx+this.w/2, sy+8+bob, 8, 0, Math.PI*2); ctx.fill();
+    // hat
+    ctx.fillStyle = '#6b4226';
+    ctx.beginPath(); ctx.ellipse(sx+this.w/2, sy+3+bob, 10,4,0,0,Math.PI*2); ctx.fill();
+    ctx.fillRect(sx+this.w/2-4, sy-2+bob, 8, 6);
+    // direction indicator (eyes)
+    ctx.fillStyle='#1a1a1a';
+    let ex=sx+this.w/2, ey=sy+9+bob;
+    if(this.dir==='left'){ex-=3;} else if(this.dir==='right'){ex+=3;} else if(this.dir==='up'){ey-=2;}
+    ctx.fillRect(ex-2,ey,4,2);
+    ctx.restore();
+  }
+}
+
+/* ---------------------------- INPUT MODULE ---------------------------- */
+const Input = (() => {
+  const keys = {};
+  const map = { up:['ArrowUp','w','W'], down:['ArrowDown','s','S'], left:['ArrowLeft','a','A'], right:['ArrowRight','d','D'] };
+  let touchDir = {x:0,y:0};
+  window.addEventListener('keydown', e=>{
+    keys[e.key]=true;
+    if(!Game.inputLocked){
+      if(e.key==='e'||e.key==='E') Game.tryInteract();
+      if(e.key==='i'||e.key==='I') Game.toggleInventory();
+      if(e.key==='h'||e.key==='H') Game.showHint();
+      if(e.key==='q'||e.key==='Q') Game.toggleQuestLog();
+    }
+    if(e.key==='Escape') Game.togglePause();
+  });
+  window.addEventListener('keyup', e=>{ keys[e.key]=false; });
+  function down(dir){
+    if(touchDir.x!==0||touchDir.y!==0){
+      if(dir==='up') return touchDir.y<-0.3;
+      if(dir==='down') return touchDir.y>0.3;
+      if(dir==='left') return touchDir.x<-0.3;
+      if(dir==='right') return touchDir.x>0.3;
+    }
+    return map[dir].some(k=>keys[k]);
+  }
+  function setTouchDir(x,y){ touchDir={x,y}; }
+  return { down, setTouchDir };
+})();
+
+/* ---------------------------- LEVEL DATA ---------------------------- */
+function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+class Level {
+  constructor(def){
+    Object.assign(this, def);
+    this.solvedPuzzles = new Set();
+    this.leverActivated = false;
+    this.time = 0;
+    this.hintIndex = 0;
+    // walk-on plate puzzles: array of {id, zones:[{x,y,w,h,label}], solution:[idx,...], reward, onSolveKey}
+    this.plateProgress = {};
+    (this.platePuzzles||[]).forEach(p=> this.plateProgress[p.id] = []);
+  }
+  collides(x,y,w,h){
+    for(const o of this.obstacles){
+      if(o.solid && rectsOverlap(x,y,w,h,o.x,o.y,o.w,o.h)) return true;
+    }
+    return false;
+  }
+  findInteractable(px,py,pw,ph){
+    for(const it of this.interactables){
+      if(it.done && it.oneTime) continue;
+      const cx = px+pw/2, cy=py+ph/2;
+      const d = Math.hypot(cx-(it.x), cy-(it.y));
+      if(d < (it.radius||46)) return it;
+    }
+    return null;
+  }
+  checkHazards(player){
+    for(const h of this.hazards||[]){
+      if(rectsOverlap(player.x,player.y,player.w,player.h,h.x,h.y,h.w,h.h)){
+        player.damage(h.damage||1);
+      }
+    }
+  }
+  updateAnimated(dt){
+    this.time += dt;
+    // moving guardians: patrol back and forth along an axis
+    (this.hazards||[]).forEach(h=>{
+      if(h.kind==='guardian'){
+        const range = h.range||120;
+        const t = Math.sin(this.time/1000 * (h.speed||1));
+        if(h.axis==='x') h.x = h.baseX + t*range; else h.y = h.baseY + t*range;
+      } else if(h.kind==='pendulum'){
+        const swing = Math.sin(this.time/1000*(h.speed||1.4));
+        h.x = h.baseX + swing*(h.range||90);
+      }
+    });
+  }
+  checkPlates(player, onSolveCallback, onFailCallback){
+    (this.platePuzzles||[]).forEach(pz=>{
+      if(this.solvedPuzzles.has(pz.id)) return;
+      const cx = player.x+player.w/2, cy = player.y+player.h/2;
+      let standingIdx = -1;
+      pz.zones.forEach((z,i)=>{ if(cx>z.x && cx<z.x+z.w && cy>z.y && cy<z.y+z.h) standingIdx=i; });
+      const prog = this.plateProgress[pz.id];
+      if(standingIdx>=0 && prog[prog.length-1]!==standingIdx){
+        prog.push(standingIdx);
+        AudioSys.sfx.click();
+        const expectedLen = prog.length;
+        const correctSoFar = prog.every((v,i)=>v===pz.solution[i]);
+        if(!correctSoFar){
+          onFailCallback(pz);
+          this.plateProgress[pz.id] = [];
+        } else if(prog.length===pz.solution.length){
+          this.solvedPuzzles.add(pz.id);
+          onSolveCallback(pz);
+        }
+      }
+    });
+  }
+}
+
+/* Deterministic scatter helper for decoration (trees/rocks/etc.) */
+function scatter(seedArr, w, h, margin=40){
+  return seedArr.map(([fx,fy,extra])=>({x:margin+fx*(w-margin*2), y:margin+fy*(h-margin*2), ...(extra||{})}));
+}
+
+function buildLevels(){
+  const L = [];
+
+  /* ---------- LEVEL 1: MYSTERIOUS FOREST ---------- */
+  {
+    const W=1400,H=900;
+    const treeSpots = scatter([
+      [0.06,0.1],[0.15,0.22],[0.3,0.08],[0.42,0.18],[0.55,0.07],[0.68,0.15],[0.82,0.09],[0.92,0.2],
+      [0.08,0.4],[0.2,0.55],[0.35,0.62],[0.5,0.5],[0.63,0.6],[0.78,0.48],[0.9,0.58],
+      [0.1,0.78],[0.25,0.88],[0.4,0.8],[0.58,0.85],[0.72,0.78],[0.88,0.85],[0.95,0.65]
+    ],W,H);
+    const obstacles = treeSpots.map(p=>({x:p.x-14,y:p.y-14,w:28,h:36,solid:true,kind:'tree'}));
+    obstacles.push({x:0,y:0,w:W,h:16,solid:true},{x:0,y:H-16,w:W,h:16,solid:true},{x:0,y:0,w:16,h:H,solid:true},{x:W-16,y:0,w:16,h:H,solid:true});
+    const rocks = scatter([[0.2,0.3],[0.45,0.35],[0.7,0.3],[0.3,0.7],[0.6,0.72]],W,H).map(p=>({x:p.x,y:p.y,w:26,h:18,solid:true,kind:'rock'}));
+    obstacles.push(...rocks);
+
+    L.push(new Level({
+      id:0, name:'Mysterious Forest', sub:'An ancient path lies hidden beneath the canopy.',
+      worldW:W, worldH:H, bg:'#132a19', groundColor:'#1c3a22',
+      spawn:{x:80,y:80},
+      obstacles,
+      decor:{trees:treeSpots.map(p=>({x:p.x,y:p.y})), rocks},
+      hazards:[],
+      objective:'Find the three forest symbols and open the hidden chest.',
+      hints:[
+        'Look for a weathered sign near the northwest of the forest — it holds the symbol order.',
+        'The chest wants: Star, Sun, Moon — in that order.',
+        'The chest sits in the far southeast corner of the forest.',
+      ],
+      interactables:[
+        {id:'sign1',type:'sign',x:200,y:200,radius:50,label:'Weathered Sign',
+          title:'Weathered Sign', body:'Carved into the bark: "Where the star has set, the sun still rests, and the moon watches last."\n\nOrder: Star, Sun, Moon.'},
+        {id:'chestF',type:'chest',x:W-160,y:H-160,radius:56,label:'Locked Chest', oneTime:true,
+          puzzle:{type:'symbolSequence', title:'Ancient Chest', sub:'Enter the symbols in the order the sign described.',
+            symbols:['⭐','☀️','🌙'], solution:['⭐','☀️','🌙']},
+          reward:{item:'map', clue:'forestSymbols', toast:'You found the Ancient Map!'}},
+        {id:'clueRock',type:'clue',x:700,y:300,radius:50,label:'Strange Marking', oneTime:true,
+          title:'Strange Marking', body:'A faded carving of a village gate, half-swallowed by moss. Something waits beyond the forest.'},
+        {id:'exitF',type:'exit',x:W-40,y:60,radius:60,label:'Path to the Village', requiresItem:'map',
+          lockedMsg:'The overgrown path is unclear without a map.', next:1},
+      ],
+    }));
+  }
+
+  /* ---------- LEVEL 2: ABANDONED VILLAGE ---------- */
+  {
+    const W=1300,H=850;
+    const houses = [
+      {x:120,y:120,w:160,h:110},{x:420,y:90,w:150,h:100},{x:760,y:140,w:170,h:110},
+      {x:1000,y:400,w:150,h:100},{x:200,y:520,w:170,h:110},{x:560,y:560,w:150,h:100},
+    ];
+    const obstacles = houses.map(h=>({...h,solid:true,kind:'house'}));
+    obstacles.push({x:0,y:0,w:W,h:16,solid:true},{x:0,y:H-16,w:W,h:16,solid:true},{x:0,y:0,w:16,h:H,solid:true},{x:W-16,y:0,w:16,h:H,solid:true});
+    obstacles.push({x:520,y:300,w:60,h:60,solid:true,kind:'well'});
+
+    L.push(new Level({
+      id:1, name:'Abandoned Village', sub:'Silence hangs over homes long since deserted.',
+      worldW:W, worldH:H, bg:'#241f16', groundColor:'#3a3020',
+      spawn:{x:60,y:60},
+      obstacles,
+      decor:{houses, well:{x:520,y:300}},
+      hazards:[{x:900,y:250,w:70,h:16,damage:1,kind:'brokenBoard'}],
+      objective:'Search the village and uncover the 4-digit combination.',
+      hints:[
+        'Three clues are scattered in houses and at the well — each reveals one digit.',
+        'Houses still standing: 6. Seasons passed: 3. Depth of the well: 7. Year ending in: 9.',
+        'The combination is 6-3-7-9. Enter it at the locked door.',
+      ],
+      interactables:[
+        {id:'note1',type:'sign',x:190,y:150,radius:50,label:'Torn Note', oneTime:true,
+          title:'Torn Note', body:'"...the first digit is the number of houses that still stand: 6..."'},
+        {id:'note2',type:'sign',x:1075,y:430,radius:50,label:'Old Journal Page', oneTime:true,
+          title:'Old Journal Page', body:'"...second digit: count the seasons since I arrived — three winters, three summers. Write 3..."'},
+        {id:'well1',type:'clue',x:550,y:330,radius:56,label:'Ancient Well', oneTime:true,
+          title:'Ancient Well', body:'Etched into the stone rim: "The third number is the depth in fathoms — a lucky seven." \n\nEtched below, fainter: "...and the last, the year the gate was sealed, ends in nine."'},
+        {id:'doorV',type:'door',x:850,y:180,radius:56,label:'Locked Door', oneTime:true,
+          puzzle:{type:'codeEntry', title:'Village Vault Door', sub:'Enter the 4-digit combination from the clues.',
+            digits:4, solution:'6379'},
+          reward:{item:'rustyKey', clue:'villageCode', toast:'You found the Rusty Key!'}},
+        {id:'exitV',type:'exit',x:W-40,y:H-60,radius:60,label:'Path to the Cave', requiresItem:'rustyKey',
+          lockedMsg:'The cave gate is rusted shut. You need a key.', next:2},
+      ],
+    }));
+  }
+
+  /* ---------- LEVEL 3: ANCIENT CAVE ---------- */
+  {
+    const W=1300,H=850;
+    const walls = [
+      {x:0,y:0,w:W,h:16},{x:0,y:H-16,w:W,h:16},{x:0,y:0,w:16,h:H},{x:W-16,y:0,w:16,h:H},
+      {x:300,y:0,w:24,h:400},{x:300,y:550,w:24,h:300},
+      {x:700,y:150,w:24,h:500},
+      {x:950,y:0,w:24,h:300},{x:950,y:500,w:24,h:350},
+    ];
+    const obstacles = walls.map(w=>({...w,solid:true,kind:'wall'}));
+
+    L.push(new Level({
+      id:2, name:'Ancient Cave', sub:'Darkness swallows the passage. A torch will be needed.',
+      worldW:W, worldH:H, bg:'#0c0d10', groundColor:'#1a1a1f', dark:true,
+      spawn:{x:60,y:60},
+      obstacles,
+      decor:{stalactites: scatter([[0.1,0.1],[0.3,0.15],[0.5,0.1],[0.7,0.2],[0.9,0.1],[0.15,0.8],[0.6,0.85],[0.85,0.75]],W,H)},
+      hazards:[
+        {x:420,y:600,w:60,h:16,damage:1,kind:'spikes'},
+        {x:800,y:250,w:16,h:60,damage:1,kind:'spikes'},
+        {baseX:400,baseY:450,x:400,y:450,w:26,h:26,damage:1,kind:'guardian',axis:'x',range:150,speed:0.9},
+      ],
+      objective:'Light your torch, then step on the three floor plates in the order the wall describes.',
+      hints:[
+        'Pick up the torch near the entrance — the darkness ahead is treacherous without it.',
+        'The wall inscription near the middle of the cave reveals the plate order.',
+        'Step on the plates: Left, then Right, then Center. A guardian patrols nearby — time it carefully.',
+      ],
+      interactables:[
+        {id:'torchPickup',type:'item',x:140,y:150,radius:50,label:'Old Torch', oneTime:true,
+          title:'Old Torch', body:'A half-burnt torch, still usable. Light will help you see through the darkness ahead.',
+          reward:{item:'torch', toast:'You picked up a Torch!'}},
+        {id:'inscription1',type:'sign',x:500,y:120,radius:50,label:'Wall Inscription', oneTime:true,
+          title:'Wall Inscription', body:'Faded glyphs read: "Step upon the left stone, then the right, then the one at the heart of the room." A living guardian patrols nearby — time your crossing.'},
+        {id:'exitC',type:'exit',x:W-40,y:H-60,radius:60,label:'Path to the Temple', requiresItem:'symbol',
+          lockedMsg:'The passage beyond is sealed by an ancient mechanism.', next:3},
+      ],
+      platePuzzles:[
+        {id:'caveplates', zones:[
+            {x:740,y:600,w:60,h:60,label:'◀'},
+            {x:900,y:600,w:60,h:60,label:'▶'},
+            {x:820,y:700,w:60,h:60,label:'●'},
+          ], solution:[0,1,2],
+          reward:{item:'symbol', clue:'caveSymbols', toast:'The plates align — you collected the Three Ancient Symbols!'}},
+      ],
+    }));
+  }
+
+  /* ---------- LEVEL 4: FORGOTTEN TEMPLE ---------- */
+  {
+    const W=1300,H=850;
+    const obstacles = [
+      {x:0,y:0,w:W,h:16,solid:true},{x:0,y:H-16,w:W,h:16,solid:true},{x:0,y:0,w:16,h:H,solid:true},{x:W-16,y:0,w:16,h:H,solid:true},
+      {x:250,y:250,w:40,h:40,solid:true,kind:'statue'},{x:1000,y:250,w:40,h:40,solid:true,kind:'statue'},
+      {x:250,y:550,w:40,h:40,solid:true,kind:'statue'},{x:1000,y:550,w:40,h:40,solid:true,kind:'statue'},
+      {x:580,y:380,w:140,h:90,solid:true,kind:'stonedoor'},
+    ];
+    L.push(new Level({
+      id:3, name:'Forgotten Temple', sub:'Great stone doors bar the way to the treasure chamber.',
+      worldW:W, worldH:H, bg:'#241a10', groundColor:'#3a2c18',
+      spawn:{x:60,y:60},
+      obstacles,
+      decor:{statues:[{x:270,y:270},{x:1020,y:270},{x:270,y:570},{x:1020,y:570}]},
+      hazards:[
+        {x:450,y:150,w:60,h:16,damage:1,kind:'dart'},
+        {baseX:820,baseY:150,x:820,y:150,w:20,h:60,damage:1,kind:'pendulum',range:110,speed:1.6},
+        {baseX:400,baseY:650,x:400,y:650,w:26,h:26,damage:1,kind:'guardian',axis:'x',range:180,speed:0.7},
+      ],
+      objective:'Align the temple dials using the ancient symbols and open the stone door.',
+      hints:[
+        'A hidden panel on the west wall describes the correct dial order.',
+        'Align the dials as: Star, Moon, Sun.',
+        'Watch the swinging pendulum and patrolling guardian near the mechanism — cross when the path is clear.',
+      ],
+      interactables:[
+        {id:'leverHint',type:'sign',x:140,y:400,radius:50,label:'Hidden Lever Panel', oneTime:true,
+          title:'Hidden Lever Panel', body:'A weathered panel: "Star above, Moon beside, Sun below — as the forest once foretold."'},
+        {id:'templeDial',type:'dial',x:650,y:300,radius:60,label:'Temple Mechanism', oneTime:true,
+          puzzle:{type:'rotationDials', title:'Temple Mechanism', sub:'Align each dial to match: Star, Moon, Sun.',
+            options:['☀️','🌙','⭐'], solution:['⭐','🌙','☀️']},
+          reward:{item:'treasureKey', clue:'templeDials', toast:'The stone door grinds open — you found the Treasure Key!'}},
+        {id:'exitT',type:'exit',x:W-40,y:H-60,radius:60,label:'Path to the Chamber', requiresItem:'treasureKey',
+          lockedMsg:'The chamber entrance remains sealed.', next:4},
+      ],
+    }));
+  }
+
+  /* ---------- LEVEL 5: TREASURE CHAMBER ---------- */
+  {
+    const W=1000,H=700;
+    const obstacles = [
+      {x:0,y:0,w:W,h:16,solid:true},{x:0,y:H-16,w:W,h:16,solid:true},{x:0,y:0,w:16,h:H,solid:true},{x:W-16,y:0,w:16,h:H,solid:true},
+    ];
+    L.push(new Level({
+      id:4, name:'Treasure Chamber', sub:'At last — the legend made real.',
+      worldW:W, worldH:H, bg:'#241a06', groundColor:'#3d2c08', golden:true,
+      spawn:{x:60,y:H/2},
+      obstacles,
+      decor:{},
+      hazards:[],
+      objective:'Recall your journey and open the final treasure.',
+      hints:[
+        'Think back on the order you found your treasures across the island.',
+        'Present them as: Map, Key, Symbols, Treasure Key.',
+      ],
+      interactables:[
+        {id:'finalChest',type:'chest',x:W-160,y:H/2,radius:70,label:'The Legendary Treasure', oneTime:true,
+          puzzle:{type:'finalClue', title:'The Final Seal', sub:'Present your discoveries in the order you found them: Map, Key, Symbols, Treasure Key.',
+            choices:['🗺️','🗝️','🔯','🏺'], solution:['🗺️','🗝️','🔯','🏺']},
+          reward:{clue:'finalOpened', toast:'The treasure chamber opens!', victory:true}},
+      ],
+    }));
+  }
+
+  return L;
+}
+
+/* ---------------------------- MAIN GAME ---------------------------- */
+const Game = (() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let levels = [];
+  let currentLevelIdx = 0;
+  let player = null;
+  let inventory = new Inventory();
+  let running = false;
+  let paused = false;
+  let inputLocked = false;
+  let camX=0, camY=0;
+  let screenShake = 0;
+  let lastTime = 0;
+  let startTime = 0;
+  let elapsedMs = 0;
+  let damageTaken = 0;
+  let cluesTotal = 9; // approx total clue/sign entries
+  let touchInteractTarget = null;
+  let particles = [];
+  let fade = {active:false, alpha:0, dir:0, cb:null};
+  let zoomPulse = 0;
+  let questLogOpen = false;
+  const minimapCanvas = document.getElementById('minimapCanvas');
+  const mmCtx = minimapCanvas.getContext('2d');
+
+  function resizeCanvas(){
+    const maxW = Math.min(window.innerWidth-20, 1000);
+    const maxH = Math.min(window.innerHeight-20, 640);
+    const scale = Math.min(maxW/960, maxH/600);
+    canvas.style.width = (960*scale)+'px';
+    canvas.style.height = (600*scale)+'px';
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function init(){
+    levels = buildLevels();
+    resizeCanvas();
+    setupMenuHandlers();
+    setupTouchControls();
+    document.getElementById('btnContinue').disabled = !SaveSystem.exists();
+    showScreen('screenMenu');
+  }
+
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  }
+  function hideAllScreens(){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); }
+
+  function newGame(){
+    inventory = new Inventory();
+    currentLevelIdx = 0;
+    damageTaken = 0;
+    startTime = performance.now();
+    elapsedMs = 0;
+    levels = buildLevels();
+    loadLevel(0, true);
+    hideAllScreens();
+    running = true; paused = false;
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function continueGame(){
+    const data = SaveSystem.load();
+    if(!data){ newGame(); return; }
+    levels = buildLevels();
+    inventory.restore(data.inventory);
+    currentLevelIdx = data.levelIdx||0;
+    data.solvedPerLevel?.forEach((arr,i)=>{ if(levels[i]) arr.forEach(id=>levels[i].solvedPuzzles.add(id)); });
+    damageTaken = data.damageTaken||0;
+    elapsedMs = data.elapsedMs||0;
+    startTime = performance.now() - elapsedMs;
+    loadLevel(currentLevelIdx, false);
+    if(data.playerPos){ player.x=data.playerPos.x; player.y=data.playerPos.y; }
+    if(typeof data.health==='number') player.health = data.health;
+    hideAllScreens();
+    running = true; paused=false;
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+    showToast('Game loaded.');
+  }
+
+  function doSave(){
+    const lvl = levels[currentLevelIdx];
+    const solvedPerLevel = levels.map(l=>[...l.solvedPuzzles]);
+    const data = {
+      levelIdx: currentLevelIdx,
+      inventory: inventory.serialize(),
+      solvedPerLevel,
+      playerPos: {x:player.x, y:player.y},
+      health: player.health,
+      damageTaken, elapsedMs: performance.now()-startTime,
+    };
+    const ok = SaveSystem.save(data);
+    showToast(ok? 'Game saved.' : 'Save failed.');
+  }
+
+  function loadLevel(idx, resetPlayer){
+    currentLevelIdx = idx;
+    const lvl = levels[idx];
+    if(resetPlayer || !player){
+      player = new Player(lvl.spawn.x, lvl.spawn.y);
+    } else {
+      player.x = lvl.spawn.x; player.y = lvl.spawn.y;
+    }
+    updateObjective();
+    updateInteractHint(null);
+    questLogOpen = false;
+    document.getElementById('questLog').classList.add('hidden');
+    AudioSys.startAmbient(idx);
+    flashLevelBanner(lvl.name, lvl.sub);
+    doFade(false);
+  }
+
+  function respawn(){
+    const lvl = levels[currentLevelIdx];
+    player.x = lvl.spawn.x; player.y = lvl.spawn.y;
+    player.health = player.maxHealth;
+    showToast('You stumble but recover...');
+  }
+
+  function flashLevelBanner(name, sub){
+    const b = document.getElementById('levelBanner');
+    b.querySelector('.lname').textContent = name;
+    b.querySelector('.lsub').textContent = sub;
+    b.classList.add('show');
+    setTimeout(()=>b.classList.remove('show'), 2400);
+  }
+
+  function showToast(msg, icon){
+    const t = document.getElementById('toast');
+    t.innerHTML = (icon? `<span class="toast-icon">${icon}</span>`:'') + `<span>${msg}</span>`;
+    t.classList.add('show');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+  function flashDamage(){
+    const v = document.getElementById('damageVignette');
+    v.classList.add('hit');
+    setTimeout(()=>v.classList.remove('hit'), 220);
+  }
+
+  function updateObjective(){
+    document.getElementById('objectiveText').textContent = levels[currentLevelIdx].objective;
+  }
+
+  function updateInteractHint(target){
+    const el = document.getElementById('interactPrompt');
+    if(target){
+      el.textContent = (target.locked ? target.lockedMsg : 'Press E — '+target.label);
+      el.classList.add('show');
+      touchInteractTarget = target;
+    } else {
+      el.classList.remove('show');
+      touchInteractTarget = null;
+    }
+  }
+
+  function doFade(fadeOut, cb){
+    fade.active = true; fade.dir = fadeOut?1:-1; fade.alpha = fadeOut?0:1; fade.cb = cb||null;
+  }
+
+  function tryInteract(){
+    if(!running || paused || inputLocked) return;
+    const lvl = levels[currentLevelIdx];
+    const target = lvl.findInteractable(player.x, player.y, player.w, player.h);
+    if(!target) return;
+    handleInteract(lvl, target);
+  }
+
+  function handleInteract(lvl, target){
+    if(target.type==='exit'){
+      if(target.requiresItem && !inventory.has(target.requiresItem)){
+        showToast(target.lockedMsg);
+        return;
+      }
+      AudioSys.sfx.door();
+      doFade(true, ()=>{
+        if(target.next < levels.length){
+          loadLevel(target.next, true);
+        }
+      });
+      return;
+    }
+    if(target.type==='sign' || target.type==='clue'){
+      openDialogue(target.title, target.body);
+      if(target.oneTime){ target.done = true; inventory.addClue(target.id); }
+      return;
+    }
+    if(target.type==='item'){
+      if(target.reward?.item) inventory.add(target.reward.item);
+      if(target.reward?.toast) showToast(target.reward.toast);
+      AudioSys.sfx.pickup();
+      openDialogue(target.title, target.body);
+      target.done = true;
+      return;
+    }
+    if(target.type==='chest' || target.type==='door' || target.type==='plates' || target.type==='dial'){
+      if(lvl.solvedPuzzles.has(target.id)){
+        showToast('Already solved.');
+        return;
+      }
+      launchPuzzle(target, ()=>{
+        lvl.solvedPuzzles.add(target.id);
+        target.done = true;
+        if(target.reward?.item) inventory.add(target.reward.item);
+        if(target.reward?.clue) inventory.addClue(target.reward.clue);
+        if(target.reward?.toast) showToast(target.reward.toast, '✨');
+        spawnBurst(target.x, target.y);
+        AudioSys.sfx.unlock();
+        zoomPulse = 1;
+        if(questLogOpen) renderQuestLog();
+        if(target.reward?.victory){
+          setTimeout(triggerVictory, 500);
+        }
+      });
+      return;
+    }
+  }
+
+  function openDialogue(title, body){
+    document.getElementById('dialogueTitle').textContent = title;
+    document.getElementById('dialogueBody').textContent = body;
+    Modal.open('modalDialogue');
+  }
+
+  function launchPuzzle(target, onSolve){
+    const p = target.puzzle;
+    Puzzles[p.type]({...p, onSolve});
+  }
+
+  function spawnBurst(x,y){
+    for(let i=0;i<18;i++){
+      particles.push({x,y, vx:(Math.random()-0.5)*3, vy:(Math.random()-1.4)*3, life:600, maxLife:600, color: Math.random()>0.5?'#f2d879':'#d9a441'});
+    }
+  }
+
+  function toggleInventory(){
+    if(!running) return;
+    if(document.getElementById('modalInventory').classList.contains('hidden')){
+      renderInventory();
+      Modal.open('modalInventory');
+    } else {
+      Modal.close('modalInventory');
+    }
+  }
+
+  function renderInventory(){
+    const grid = document.getElementById('invGrid');
+    grid.innerHTML = '';
+    Object.entries(ITEM_DEFS).forEach(([id,def])=>{
+      const has = inventory.has(id);
+      const slot = document.createElement('div');
+      slot.className = 'inv-slot' + (has?' have':'');
+      slot.innerHTML = `<div class="inv-icon">${has?def.icon:'❔'}</div><div>${has?def.name:'???'}</div>`;
+      grid.appendChild(slot);
+    });
+    document.getElementById('itemCount').textContent = inventory.items.size;
+    document.getElementById('clueCount').textContent = inventory.clues.size;
+  }
+
+  function togglePause(){
+    if(!running) return;
+    paused = !paused;
+    if(paused){ showScreen('screenPause'); updateMuteLabel(); }
+    else { hideAllScreens(); lastTime = performance.now(); }
+  }
+
+  function triggerVictory(){
+    running = false;
+    AudioSys.stopAmbient();
+    AudioSys.sfx.victory();
+    const totalTimeSec = Math.floor((performance.now()-startTime)/1000);
+    const mins = Math.floor(totalTimeSec/60), secs = totalTimeSec%60;
+    const puzzlesSolved = levels.reduce((a,l)=>a+l.solvedPuzzles.size,0);
+    const clueCount = inventory.clues.size;
+    const itemCount = inventory.items.size;
+    let score = Math.max(0, 5000 - totalTimeSec*3 - damageTaken*80 + puzzlesSolved*220 + clueCount*60 + itemCount*40);
+    let rank = 'C', rankLabel='Treasure Seeker';
+    if(score>4200){rank='S';rankLabel='Master Explorer';}
+    else if(score>3200){rank='A';rankLabel='Expert Adventurer';}
+    else if(score>2200){rank='B';rankLabel='Skilled Explorer';}
+    document.getElementById('rankBadge').textContent = rank;
+    document.getElementById('victorySub').textContent = rankLabel;
+    document.getElementById('victoryStats').innerHTML = `
+      Completion Time: <b>${mins}m ${secs}s</b><br>
+      Puzzles Solved: <b>${puzzlesSolved} / ${levels.length}</b><br>
+      Clues Discovered: <b>${clueCount}</b><br>
+      Items Collected: <b>${itemCount} / ${Object.keys(ITEM_DEFS).length}</b><br>
+      Damage Taken: <b>${damageTaken}</b><br>
+      Final Score: <b>${score}</b>
+    `;
+    showScreen('screenVictory');
+  }
+
+  function setupMenuHandlers(){
+    document.getElementById('btnNewGame').onclick = ()=>{ AudioSys.ensure(); newGame(); };
+    document.getElementById('btnContinue').onclick = ()=>{ AudioSys.ensure(); continueGame(); };
+    document.getElementById('btnHowTo').onclick = ()=> showScreen('screenHowTo');
+    document.getElementById('btnHowToBack').onclick = ()=> showScreen('screenMenu');
+    document.getElementById('btnCredits').onclick = ()=> showScreen('screenCredits');
+    document.getElementById('btnCreditsBack').onclick = ()=> showScreen('screenMenu');
+    document.getElementById('btnResume').onclick = togglePause;
+    document.getElementById('btnSaveNow').onclick = doSave;
+    document.getElementById('btnRestartLevel').onclick = ()=>{ loadLevel(currentLevelIdx, true); togglePause(); };
+    document.getElementById('btnMuteToggle').onclick = ()=>{
+      AudioSys.setMuted(!AudioSys.muted);
+      updateMuteLabel();
+      if(!AudioSys.muted) AudioSys.startAmbient(currentLevelIdx);
+    };
+    document.getElementById('btnToMenu').onclick = ()=>{
+      running=false; paused=false; AudioSys.stopAmbient(); showScreen('screenMenu');
+      document.getElementById('btnContinue').disabled = !SaveSystem.exists();
+    };
+    document.getElementById('btnPlayAgain').onclick = ()=> newGame();
+    document.getElementById('btnVictoryMenu').onclick = ()=>{ showScreen('screenMenu'); document.getElementById('btnContinue').disabled = !SaveSystem.exists(); };
+    document.getElementById('btnInventory').onclick = toggleInventory;
+    document.getElementById('btnPause').onclick = togglePause;
+    document.getElementById('btnHint').onclick = showHint;
+    document.getElementById('questLogBtn').onclick = toggleQuestLog;
+  }
+  function updateMuteLabel(){
+    document.getElementById('btnMuteToggle').textContent = 'Mute Audio: ' + (AudioSys.muted?'On':'Off');
+  }
+
+  function setupTouchControls(){
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+    const tc = document.getElementById('touchControls');
+    if(isTouch) tc.classList.add('active');
+    const base = document.getElementById('joyBase');
+    const stick = document.getElementById('joyStick');
+    let dragging=false, baseRect;
+    function start(e){ dragging=true; baseRect = base.getBoundingClientRect(); AudioSys.ensure(); }
+    function move(e){
+      if(!dragging) return;
+      const t = e.touches ? e.touches[0] : e;
+      const cx = baseRect.left+baseRect.width/2, cy = baseRect.top+baseRect.height/2;
+      let dx = (t.clientX-cx)/ (baseRect.width/2);
+      let dy = (t.clientY-cy)/ (baseRect.height/2);
+      const mag = Math.hypot(dx,dy);
+      if(mag>1){ dx/=mag; dy/=mag; }
+      stick.style.left = (35+dx*30)+'px';
+      stick.style.top = (35+dy*30)+'px';
+      Input.setTouchDir(dx,dy);
+    }
+    function end(){ dragging=false; stick.style.left='35px'; stick.style.top='35px'; Input.setTouchDir(0,0); }
+    base.addEventListener('touchstart', start, {passive:true});
+    base.addEventListener('touchmove', move, {passive:true});
+    base.addEventListener('touchend', end);
+    base.addEventListener('mousedown', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    document.getElementById('touchInteract').addEventListener('click', ()=> tryInteract());
+  }
+
+  /* ---------------------------- RENDER ---------------------------- */
+  function render(){
+    const lvl = levels[currentLevelIdx];
+    canvas.width = 960; canvas.height = 600;
+    // camera
+    camX = Math.max(0, Math.min(lvl.worldW-960, player.x-480+11));
+    camY = Math.max(0, Math.min(lvl.worldH-600, player.y-300+15));
+    let sx=0, sy=0;
+    if(screenShake>0){ sx=(Math.random()-0.5)*screenShake; sy=(Math.random()-0.5)*screenShake; screenShake*=0.85; if(screenShake<0.5)screenShake=0; }
+    ctx.save();
+    ctx.translate(sx,sy);
+    if(zoomPulse>0){
+      const scale = 1 + zoomPulse*0.04;
+      ctx.translate(480,300); ctx.scale(scale,scale); ctx.translate(-480,-300);
+    }
+    ctx.fillStyle = lvl.bg; ctx.fillRect(-10,-10,980,620);
+    ctx.fillStyle = lvl.groundColor;
+    ctx.fillRect(-camX,-camY,lvl.worldW,lvl.worldH);
+    drawGroundTexture(lvl);
+    drawDecor(lvl);
+    drawObstacles(lvl);
+    drawPlates(lvl);
+    drawInteractables(lvl);
+    drawHazards(lvl);
+    player.draw(ctx, camX, camY);
+    drawParticles();
+    if(lvl.dark) drawDarkness();
+    ctx.restore();
+    updateNearestInteract(lvl);
+  }
+
+  function drawGroundTexture(lvl){
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#000';
+    for(let gx=0; gx<lvl.worldW; gx+=64){
+      for(let gy=0; gy<lvl.worldH; gy+=64){
+        if(((gx/64)+(gy/64))%2===0) ctx.fillRect(gx-camX,gy-camY,64,64);
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawDecor(lvl){
+    const d = lvl.decor||{};
+    if(d.trees) d.trees.forEach(t=>drawTree(t.x-camX,t.y-camY));
+    if(d.rocks) d.rocks.forEach(r=>drawRock(r.x-camX,r.y-camY,r.w,r.h));
+    if(d.houses) d.houses.forEach(h=>drawHouse(h.x-camX,h.y-camY,h.w,h.h));
+    if(d.well) drawWell(d.well.x-camX,d.well.y-camY);
+    if(d.stalactites) d.stalactites.forEach(s=>drawStalactite(s.x-camX,s.y-camY));
+    if(d.statues) d.statues.forEach(s=>drawStatue(s.x-camX,s.y-camY));
+  }
+  function drawTree(x,y){
+    ctx.fillStyle='#4a3320'; ctx.fillRect(x-4,y+6,8,20);
+    ctx.fillStyle='#2d4a26'; ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#376033'; ctx.beginPath(); ctx.arc(x-6,y-6,14,0,Math.PI*2); ctx.fill();
+  }
+  function drawRock(x,y,w,h){
+    ctx.fillStyle='#5c584f'; ctx.beginPath(); ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.08)'; ctx.beginPath(); ctx.ellipse(x+w/2-4,y+h/2-3,w/3,h/4,0,0,Math.PI*2); ctx.fill();
+  }
+  function drawHouse(x,y,w,h){
+    ctx.fillStyle='#4a3a26'; ctx.fillRect(x,y+h*0.35,w,h*0.65);
+    ctx.fillStyle='#7a3a2c'; ctx.beginPath(); ctx.moveTo(x-6,y+h*0.38); ctx.lineTo(x+w/2,y-6); ctx.lineTo(x+w+6,y+h*0.38); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#241a10'; ctx.fillRect(x+w*0.4,y+h*0.6,w*0.2,h*0.4);
+    ctx.fillStyle='#d9a441'; ctx.globalAlpha=0.6; ctx.fillRect(x+w*0.15,y+h*0.5,w*0.15,h*0.15); ctx.globalAlpha=1;
+  }
+  function drawWell(x,y){
+    ctx.fillStyle='#3c342a'; ctx.beginPath(); ctx.arc(x,y,32,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#0a0a0a'; ctx.beginPath(); ctx.arc(x,y,22,0,Math.PI*2); ctx.fill();
+  }
+  function drawStalactite(x,y){
+    ctx.fillStyle='#2a2a30';
+    ctx.beginPath(); ctx.moveTo(x-10,y); ctx.lineTo(x+10,y); ctx.lineTo(x,y+26); ctx.closePath(); ctx.fill();
+  }
+  function drawStatue(x,y){
+    ctx.fillStyle='#7a6a52'; ctx.fillRect(x-14,y-30,28,50);
+    ctx.fillStyle='#8f7d63'; ctx.beginPath(); ctx.arc(x,y-36,12,0,Math.PI*2); ctx.fill();
+  }
+  function drawObstacles(lvl){
+    lvl.obstacles.forEach(o=>{
+      if(o.kind==='tree'||o.kind==='rock'||o.kind==='house'||o.kind==='well'||o.kind==='statue') return; // drawn via decor
+      const x=o.x-camX,y=o.y-camY;
+      if(o.kind==='stonedoor'){ ctx.fillStyle='#5c4a30'; ctx.fillRect(x,y,o.w,o.h); ctx.strokeStyle='#d9a441'; ctx.strokeRect(x+6,y+6,o.w-12,o.h-12); }
+      else if(o.kind==='wall'){ ctx.fillStyle='#241f26'; ctx.fillRect(x,y,o.w,o.h); }
+      else { ctx.fillStyle='#22271f'; ctx.fillRect(x,y,o.w,o.h); }
+    });
+  }
+  function drawHazards(lvl){
+    (lvl.hazards||[]).forEach(h=>{
+      const x=h.x-camX,y=h.y-camY;
+      ctx.fillStyle = '#a8362c';
+      if(h.kind==='spikes'){
+        for(let i=0;i<h.w;i+=10){ ctx.beginPath(); ctx.moveTo(x+i,y+h.h); ctx.lineTo(x+i+5,y); ctx.lineTo(x+i+10,y+h.h); ctx.closePath(); ctx.fill(); }
+      } else if(h.kind==='guardian'){
+        ctx.save();
+        ctx.fillStyle='#4a3a52';
+        ctx.beginPath(); ctx.arc(x+h.w/2,y+h.h/2,h.w/2,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#e8455c';
+        const glow = 0.6+Math.sin(lvl.time/150)*0.3;
+        ctx.globalAlpha = glow;
+        ctx.beginPath(); ctx.arc(x+h.w/2,y+h.h/2,4,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else if(h.kind==='pendulum'){
+        ctx.save();
+        ctx.strokeStyle='#5c4a30'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(h.baseX+h.range-camX,y-160); ctx.lineTo(x+h.w/2,y+h.h/2); ctx.stroke();
+        ctx.fillStyle='#8a2f28';
+        ctx.beginPath(); ctx.arc(x+h.w/2,y+h.h/2,14,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#d9a441'; ctx.lineWidth=2; ctx.stroke();
+        ctx.restore();
+      } else { ctx.globalAlpha=0.6; ctx.fillRect(x,y,h.w,h.h); ctx.globalAlpha=1; }
+    });
+  }
+  function drawPlates(lvl){
+    (lvl.platePuzzles||[]).forEach(pz=>{
+      const solved = lvl.solvedPuzzles.has(pz.id);
+      const prog = lvl.plateProgress[pz.id]||[];
+      pz.zones.forEach((z,i)=>{
+        const x=z.x-camX,y=z.y-camY;
+        const lit = solved || prog.includes(i);
+        ctx.save();
+        ctx.fillStyle = solved ? 'rgba(123,196,127,.5)' : lit ? 'rgba(217,164,65,.55)' : 'rgba(90,80,60,.4)';
+        ctx.fillRect(x,y,z.w,z.h);
+        ctx.strokeStyle = lit ? '#f2d879' : '#5c4a30';
+        ctx.lineWidth=2; ctx.strokeRect(x,y,z.w,z.h);
+        ctx.font='16px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#1c150e';
+        ctx.fillText(z.label, x+z.w/2, y+z.h/2);
+        ctx.restore();
+      });
+    });
+  }
+  function drawInteractables(lvl){
+    lvl.interactables.forEach(it=>{
+      if(it.done && it.oneTime && it.type!=='exit') return;
+      const x=it.x-camX,y=it.y-camY;
+      let color='#d9a441', glyph='?';
+      if(it.type==='exit') { color='#7bc47f'; glyph='➜'; }
+      else if(it.type==='chest') glyph='📦';
+      else if(it.type==='door') glyph='🚪';
+      else if(it.type==='sign') glyph='📜';
+      else if(it.type==='clue') glyph='🔍';
+      else if(it.type==='item') glyph='✨';
+      else if(it.type==='plates') glyph='🔲';
+      else if(it.type==='dial') glyph='⚙️';
+      const locked = it.requiresItem && !inventory.has(it.requiresItem);
+      it.locked = locked;
+      ctx.save();
+      ctx.globalAlpha = locked ? 0.55 : 1;
+      ctx.fillStyle = 'rgba(0,0,0,.3)';
+      ctx.beginPath(); ctx.arc(x,y,20,0,Math.PI*2); ctx.fill();
+      ctx.font='22px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(glyph, x, y);
+      ctx.strokeStyle = color; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(x,y,22,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    });
+  }
+  function drawParticles(){
+    particles = particles.filter(p=>p.life>0);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life-=16;
+      ctx.globalAlpha = Math.max(0,p.life/p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x-camX,p.y-camY,3,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+    });
+  }
+  function drawDarkness(){
+    ctx.save();
+    const hasTorch = inventory.has('torch');
+    const radius = hasTorch ? 220 : 130;
+    const grad = ctx.createRadialGradient(player.x-camX+11, player.y-camY+15, radius*0.25, player.x-camX+11, player.y-camY+15, radius);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,0.93)');
+    ctx.fillStyle='#000';
+    ctx.fillRect(-camX,-camY,levels[currentLevelIdx].worldW+camX,levels[currentLevelIdx].worldH+camY);
+    ctx.globalCompositeOperation='destination-out';
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(player.x-camX+11, player.y-camY+15, radius, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function updateNearestInteract(lvl){
+    const target = lvl.findInteractable(player.x, player.y, player.w, player.h);
+    updateInteractHint(target);
+  }
+
+  function updateHUD(){
+    const hearts = document.getElementById('heartsRow');
+    hearts.innerHTML = '';
+    for(let i=0;i<player.maxHealth;i++){
+      const h = document.createElement('div');
+      h.className = 'heart' + (i<player.health?'':' empty');
+      hearts.appendChild(h);
+    }
+  }
+
+  function loop(now){
+    if(!running) return;
+    const dt = Math.min(50, now-lastTime);
+    lastTime = now;
+    if(!paused && !inputLocked){
+      const lvl = levels[currentLevelIdx];
+      const healthBefore = player.health;
+      player.update(dt, lvl);
+      lvl.updateAnimated(dt);
+      lvl.checkHazards(player);
+      lvl.checkPlates(player,
+        (pz)=>{
+          if(pz.reward?.item) inventory.add(pz.reward.item);
+          if(pz.reward?.clue) inventory.addClue(pz.reward.clue);
+          if(pz.reward?.toast) showToast(pz.reward.toast, '✨');
+          spawnBurst(player.x, player.y);
+          AudioSys.sfx.unlock();
+          zoomPulse = 1;
+        },
+        (pz)=>{ showToast('Wrong plate order — reset.', '⚠️'); AudioSys.sfx.puzzleFail(); }
+      );
+      if(player.health < healthBefore) flashDamage();
+    }
+    if(fade.active){
+      fade.alpha += fade.dir*0.06;
+      if(fade.dir>0 && fade.alpha>=1){ fade.alpha=1; fade.dir=-1; if(fade.cb){fade.cb(); fade.cb=null;} }
+      else if(fade.dir<0 && fade.alpha<=0){ fade.alpha=0; fade.active=false; }
+    }
+    render();
+    updateHUD();
+    drawMinimap();
+    if(questLogOpen) renderQuestLog();
+    if(zoomPulse>0) zoomPulse = Math.max(0, zoomPulse-dt/300);
+    // fade overlay
+    ctx.fillStyle = `rgba(0,0,0,${fade.active?fade.alpha:0})`;
+    ctx.fillRect(0,0,960,600);
+    requestAnimationFrame(loop);
+  }
+
+  function showHint(){
+    if(!running || paused) return;
+    const lvl = levels[currentLevelIdx];
+    const hints = lvl.hints||[];
+    if(hints.length===0){ showToast('No hints available here.', '💡'); return; }
+    const idx = Math.min(lvl.hintIndex, hints.length-1);
+    showToast(hints[idx], '💡');
+    document.getElementById('hintFlash').classList.add('show');
+    setTimeout(()=>document.getElementById('hintFlash').classList.remove('show'), 900);
+    lvl.hintIndex = Math.min(lvl.hintIndex+1, hints.length-1);
+  }
+
+  function toggleQuestLog(){
+    questLogOpen = !questLogOpen;
+    const el = document.getElementById('questLog');
+    el.classList.toggle('hidden', !questLogOpen);
+    if(questLogOpen) renderQuestLog();
+  }
+  function renderQuestLog(){
+    const lvl = levels[currentLevelIdx];
+    const el = document.getElementById('questLog');
+    const steps = lvl.interactables.filter(it=>['chest','door','plates','dial','exit'].includes(it.type) === false && it.oneTime);
+    const puzzleSteps = lvl.interactables.filter(it=>['chest','door','dial'].includes(it.type));
+    let html = '';
+    steps.forEach(it=>{
+      html += `<div class="qi ${it.done?'done':''}"><span class="qmark">${it.done?'✔':'○'}</span><span>${it.label}</span></div>`;
+    });
+    puzzleSteps.forEach(it=>{
+      const done = lvl.solvedPuzzles.has(it.id);
+      html += `<div class="qi ${done?'done':''}"><span class="qmark">${done?'✔':'○'}</span><span>${it.label}</span></div>`;
+    });
+    (lvl.platePuzzles||[]).forEach(pz=>{
+      const done = lvl.solvedPuzzles.has(pz.id);
+      html += `<div class="qi ${done?'done':''}"><span class="qmark">${done?'✔':'○'}</span><span>Floor Plates</span></div>`;
+    });
+    el.innerHTML = html || '<div class="qi">Explore to find leads.</div>';
+  }
+
+  function drawMinimap(){
+    const lvl = levels[currentLevelIdx];
+    mmCtx.clearRect(0,0,130,90);
+    mmCtx.fillStyle = 'rgba(0,0,0,.4)';
+    mmCtx.fillRect(0,0,130,90);
+    const sx = 130/lvl.worldW, sy = 90/lvl.worldH;
+    // interactables
+    lvl.interactables.forEach(it=>{
+      if(it.done && it.oneTime && it.type!=='exit') return;
+      mmCtx.fillStyle = it.type==='exit' ? '#7bc47f' : '#d9a441';
+      mmCtx.beginPath(); mmCtx.arc(it.x*sx, it.y*sy, it.type==='exit'?3:2, 0, Math.PI*2); mmCtx.fill();
+    });
+    // hazards
+    (lvl.hazards||[]).forEach(h=>{
+      mmCtx.fillStyle = '#a8362c';
+      mmCtx.fillRect(h.x*sx, h.y*sy, 2, 2);
+    });
+    // player
+    mmCtx.fillStyle = '#f2d879';
+    mmCtx.beginPath(); mmCtx.arc(player.x*sx, player.y*sy, 3, 0, Math.PI*2); mmCtx.fill();
+    mmCtx.strokeStyle='rgba(217,164,65,.5)'; mmCtx.strokeRect(0,0,130,90);
+  }
+
+  return {
+    init, tryInteract, toggleInventory, togglePause, respawn, showHint, toggleQuestLog,
+    get inputLocked(){ return inputLocked; }, set inputLocked(v){ inputLocked=v; },
+    set screenShake(v){ screenShake=v; },
+  };
+})();
+
+window.addEventListener('load', Game.init);
+</script>
+</body>
+</html>
